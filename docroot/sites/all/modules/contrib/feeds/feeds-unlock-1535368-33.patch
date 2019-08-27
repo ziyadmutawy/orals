@@ -1,0 +1,105 @@
+diff --git a/feeds.pages.inc b/feeds.pages.inc
+index 6eddf47..7d36607 100644
+--- a/feeds.pages.inc
++++ b/feeds.pages.inc
+@@ -85,16 +85,35 @@ function feeds_import_form(array $form, array &$form_state, FeedsImporter $impor
+     ) + $source_form;
+   }
+ 
++  $progress_importing = $source->progressImporting();
++  $progress_clearing = $source->progressClearing();
++
++  $locked = !lock_may_be_available("feeds_source_{$source->id}_{$source->feed_nid}");
++  $locked = $locked && $progress_importing === FEEDS_BATCH_COMPLETE;
++  $locked = $locked && $progress_clearing === FEEDS_BATCH_COMPLETE;
++
+   $form['submit'] = array(
+     '#type' => 'submit',
+     '#value' => t('Import'),
++    '#disabled' => $locked,
+   );
+-  $progress = $source->progressImporting();
+-  if ($progress !== FEEDS_BATCH_COMPLETE) {
++
++  if ($locked) {
++    drupal_set_message(t('This feed is currently locked. Use the <a href="@url">Unlock</a> tab to unlock it.', array('@url' => url('import/' . $importer->id . '/unlock'))), 'warning', FALSE);
++  }
++
++  if ($progress_clearing !== FEEDS_BATCH_COMPLETE) {
+     $form['submit']['#disabled'] = TRUE;
+     $form['submit']['#value'] =
+-      t('Importing (@progress %)', array('@progress' => number_format(100 * $progress, 0)));
++      t('Clearing (@progress %)', array('@progress' => number_format(100 * $progress_clearing, 0)));
+   }
++
++  if ($progress_importing !== FEEDS_BATCH_COMPLETE) {
++    $form['submit']['#disabled'] = TRUE;
++    $form['submit']['#value'] =
++      t('Importing (@progress %)', array('@progress' => number_format(100 * $progress_importing, 0)));
++  }
++
+   return $form;
+ }
+ 
+@@ -145,12 +164,32 @@ function feeds_import_tab_form($form, &$form_state, $node) {
+     '#value' => feeds_source_status($source),
+   );
+   $form = confirm_form($form, t('Import all content from source?'), 'node/' . $node->nid, '', t('Import'), t('Cancel'), 'confirm feeds update');
+-  $progress = $source->progressImporting();
+-  if ($progress !== FEEDS_BATCH_COMPLETE) {
++
++  $progress_importing = $source->progressImporting();
++  $progress_clearing = $source->progressClearing();
++
++  $locked = !lock_may_be_available("feeds_source_{$importer_id}_{$node->nid}");
++  $locked = $locked && $progress_importing === FEEDS_BATCH_COMPLETE;
++  $locked = $locked && $progress_clearing === FEEDS_BATCH_COMPLETE;
++
++  $form['actions']['submit']['#disabled'] = $locked;
++
++  if ($locked) {
++    drupal_set_message(t('This feed is currently locked. Use the <a href="@url">Unlock</a> tab to unlock it.', array('@url' => url('node/' . $node->nid . '/unlock'))), 'warning', FALSE);
++  }
++
++  if ($progress_clearing !== FEEDS_BATCH_COMPLETE) {
+     $form['actions']['submit']['#disabled'] = TRUE;
+     $form['actions']['submit']['#value'] =
+-      t('Importing (@progress %)', array('@progress' => number_format(100 * $progress, 0)));
++      t('Clearing (@progress %)', array('@progress' => number_format(100 * $progress_clearing, 0)));
+   }
++
++  if ($progress_importing !== FEEDS_BATCH_COMPLETE) {
++    $form['actions']['submit']['#disabled'] = TRUE;
++    $form['actions']['submit']['#value'] =
++      t('Importing (@progress %)', array('@progress' => number_format(100 * $progress_importing, 0)));
++  }
++
+   return $form;
+ }
+ 
+@@ -232,7 +271,12 @@ function feeds_unlock_tab_form($form, &$form_state, FeedsImporter $importer = NU
+     '#value' => feeds_source_status($source),
+   );
+   $form = confirm_form($form, t('Unlock this importer?'), $form['#redirect'], '', t('Delete'), t('Cancel'), 'confirm feeds update');
+-  if ($source->progressImporting() == FEEDS_BATCH_COMPLETE && $source->progressClearing() == FEEDS_BATCH_COMPLETE) {
++
++  $locked = !lock_may_be_available("feeds_source_{$source->id}_{$source->feed_nid}");
++  $locked = $locked || $source->progressImporting() !== FEEDS_BATCH_COMPLETE;
++  $locked = $locked || $source->progressClearing() !== FEEDS_BATCH_COMPLETE;
++
++  if (!$locked) {
+     $form['source_locked'] = array(
+       '#type' => 'markup',
+       '#title' => t('Not Locked'),
+@@ -263,6 +307,11 @@ function feeds_unlock_tab_form_submit($form, &$form_state) {
+     ->condition('feed_nid', $feed_nid)
+     ->fields(array('state' => FALSE))
+     ->execute();
++
++  // We can't use the lock API since we don't have the correct lock id.
++  db_delete('semaphore')
++    ->condition('name', "feeds_source_{$importer_id}_{$feed_nid}")
++    ->execute();
+ }
+ 
+ /**

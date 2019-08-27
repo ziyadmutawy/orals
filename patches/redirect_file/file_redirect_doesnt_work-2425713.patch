@@ -1,0 +1,44 @@
+diff --git a/redirect_file.module b/redirect_file.module
+index 755a175..d8ea5ff 100644
+--- a/redirect_file.module
++++ b/redirect_file.module
+@@ -28,22 +28,26 @@ function redirect_file_submit($form, &$form_state) {
+     return FALSE;
+   }
+ 
++  // Get the source URI of the file provided in the redirect.
+   $source = $form_state['values']['source'];
+-  $public_file_path = variable_get('file_public_path', 'sites/default/files');
+ 
+-  // Only move source file if it is in the 'public://' file directory.
+-  if (strstr($source, $public_file_path) !== FALSE) {
+-    $file_default_scheme = file_default_scheme() . "://";
+-    $source_path = str_replace($public_file_path . '/', $file_default_scheme, $source);
+-    $file = redirect_file_load_file_by_url($source_path);
++  // Try to load in the file object.
++  $file = redirect_file_load_file_by_url($source);
+ 
+-    if ($file) {
+-      // Rename the managed file.
+-      file_move($file, $file->uri);
+-    }
+-    else if (file_exists($source_path)) {
+-      // Rename the unmanaged file.
+-      file_unmanaged_move($source_path, $source_path);
++  if ($file) {
++    // Rename the managed file.
++    file_move($file, $file->uri);
++  }
++  else if (file_exists($source)) {
++    // Rename the unmanaged file by adding _1. For example, if the file
++    // is named "foo.txt" it will be renamed to "foo_1.txt".
++    $file_parts = explode('.', $source);
++    if ($file_parts) {
++      // Make sure we are putting the file appending right before the extension.
++      // This handles cases when the file is named something like "foo.bar.txt".
++      $file_parts[count($file_parts) - 2] .= '_1';
++      $renamed_name = implode('.', $file_parts);
++      file_unmanaged_move($source, $renamed_name);
+     }
+   }
+ }

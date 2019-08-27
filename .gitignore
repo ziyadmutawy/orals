@@ -1,0 +1,8 @@
+# Ignore paths that contain user-generated content.
+docroot/files
+docroot/sites/*/files
+docroot/sites/*/private
+
+
+# Ignore settings.php contents
+docroot/sites/*/settings.php

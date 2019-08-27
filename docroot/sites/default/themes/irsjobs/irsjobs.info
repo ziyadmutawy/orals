@@ -1,0 +1,45 @@
+name = IRS Careers Website
+description = Please provide a description for your theme.
+base theme = omega
+screenshot = screenshot.png
+engine = phptemplate
+core = 7.x
+
+; ========================================
+; Stylesheets
+; ========================================
+stylesheets[all][] = dist/css/irsjobs.styles.css
+stylesheets[all][] = dist/css/irsjobs.user-edit.css
+stylesheets[all][] = libraries/fontawesome/css/font-awesome.min.css
+
+; ========================================
+; Scripts
+; ========================================
+scripts[] = dist/js/irsjobs.behaviors.js
+scripts[] = libraries/matchHeight/jquery.matchHeight-min.js
+
+; ========================================
+; Regions
+; ========================================
+regions[page_top]           = Page Top
+regions[user_first]         = User Bar First
+regions[user_second]        = User Bar Second
+regions[branding]           = Branding
+regions[navigation]         = Navigation
+regions[header_first]       = Header First
+regions[header_second]      = Header Second
+regions[preface_first]      = Preface First
+regions[preface_second]     = Preface Second
+regions[preface_third]      = Preface Third
+regions[highlighted]        = Highlighted
+regions[help]               = Help
+regions[sidebar_first]      = Sidebar First
+regions[content]            = Content
+regions[sidebar_second]     = Sidebar Second
+regions[postscript_first]   = Postscript First
+regions[postscript_second]  = Postscript Second
+regions[postscript_third]   = Postscript Third
+regions[postscript_fourth]  = Postscript Fourth
+regions[footer_first]       = Footer First
+regions[footer_second]      = Footer Second
+regions[page_bottom]        = Page Bottom

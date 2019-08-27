@@ -1,0 +1,17 @@
+<?php
+
+function irs_utility_init(){
+  $path = drupal_get_path_alias(current_path());
+
+  // Add JS for employee profiles page
+  if (($pos = strpos($path, 'who/employee-profiles')) !== FALSE){
+    drupal_add_js(drupal_get_path('module','irs_utility').'/assets/irs-employee-profile.js');
+  }
+}
+
+/**
+ * Implements hook_admin_paths_alter();
+*/
+function irs_utility_admin_paths_alter(&$paths) {
+  $paths['user/*/edit'] = FALSE;
+}

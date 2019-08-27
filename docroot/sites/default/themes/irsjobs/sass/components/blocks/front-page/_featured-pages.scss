@@ -1,0 +1,12 @@
+// Homepage Featured Basic Pages Block
+//
+// Sets spacing for corresponding view on desktop and mobile devices.
+//
+// No styleguide reference.
+#block-views-basic-pages-block-1 {
+  margin: 4em 0;
+
+  @include media($tablet) {
+    padding: 4em 0 0;
+  }
+}
